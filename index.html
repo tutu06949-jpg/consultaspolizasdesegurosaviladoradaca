@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguros Ávila Dorada C.A. | RCV Oficial</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printable-certificate, #printable-certificate * { visibility: visible; }
+      #printable-certificate { position: absolute; left: 0; top: 0; width: 100%; border: none; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden shadow-md">
+          <img id="main-logo-img" src="" class="w-full h-full object-cover hidden">
+          <span id="main-logo-fallback"><i class="fa-solid fa-shield-halved"></i></span>
+        </div>
+        <div>
+          <span class="text-xl font-black text-slate-900 block leading-tight">SEGUROS ÁVILA DORADA</span>
+          <span class="text-xs font-semibold text-amber-600 uppercase">RCV VEHICULAR</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://wa.me/584124310782" target="_blank" class="hidden sm:inline-flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-sm">
+          <i class="fa-brands fa-whatsapp"></i> WhatsApp
+        </a>
+        <button onclick="openAdminModal()" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-3.5 rounded-lg text-xs font-semibold border border-slate-300">
+          <i class="fa-solid fa-lock text-amber-600"></i> Administración
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="bg-slate-900 text-white py-14 px-4 text-center">
+    <div class="max-w-4xl mx-auto">
+      <span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-1 rounded-full text-xs font-semibold uppercase mb-4 inline-block">
+        Consulta Digital Oficial 2026
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-black mb-4">Verificación de Pólizas RCV</h1>
+      <p class="text-slate-300 text-sm max-w-xl mx-auto mb-8">Consulte la vigencia de su certificado por placa o cédula en la base de datos nacional.</p>
+      
+      <div class="bg-white p-3 rounded-2xl shadow-xl max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
+        <input type="text" id="search-input" placeholder="Ej: AB123CD o V18234567" class="flex-1 px-4 py-3 text-slate-900 border rounded-xl uppercase font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+        <button onclick="searchPolicy()" id="search-btn" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-7 py-3 rounded-xl">
+          Consultar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result-container" class="max-w-4xl mx-auto px-4 -mt-6 relative z-20 hidden"></section>
+
+  <section class="max-w-7xl mx-auto px-4 py-16">
+    <h2 class="text-2xl font-black text-slate-900 mb-6">Vehículos Asegurados</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white rounded-2xl border p-3">
+        <div class="h-40 relative bg-slate-100 rounded-xl overflow-hidden mb-3">
+          <img id="gallery-img-1" src="https://images.unsplash.com/photo-1590362891991-f776e747a588?w=600" class="w-full h-full object-cover">
+          <label class="absolute bottom-2 right-2 bg-slate-900 text-white p-2 rounded-lg cursor-pointer text-xs">
+            <i class="fa-solid fa-camera"></i>
+            <input type="file" accept="image/*" class="hidden" onchange="changeGalleryImage(event, 'gallery-img-1')">
+          </label>
+        </div>
+        <h3 class="font-bold text-sm">Particulares y Sedán</h3>
+      </div>
+
+      <div class="bg-white rounded-2xl border p-3">
+        <div class="h-40 relative bg-slate-100 rounded-xl overflow-hidden mb-3">
+          <img id="gallery-img-2" src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600" class="w-full h-full object-cover">
+          <label class="absolute bottom-2 right-2 bg-slate-900 text-white p-2 rounded-lg cursor-pointer text-xs">
+            <i class="fa-solid fa-camera"></i>
+            <input type="file" accept="image/*" class="hidden" onchange="changeGalleryImage(event, 'gallery-img-2')">
+          </label>
+        </div>
+        <h3 class="font-bold text-sm">Camionetas y 4x4</h3>
+      </div>
+
+      <div class="bg-white rounded-2xl border p-3">
+        <div class="h-40 relative bg-slate-100 rounded-xl overflow-hidden mb-3">
+          <img id="gallery-img-3" src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600" class="w-full h-full object-cover">
+          <label class="absolute bottom-2 right-2 bg-slate-900 text-white p-2 rounded-lg cursor-pointer text-xs">
+            <i class="fa-solid fa-camera"></i>
+            <input type="file" accept="image/*" class="hidden" onchange="changeGalleryImage(event, 'gallery-img-3')">
+          </label>
+        </div>
+        <h3 class="font-bold text-sm">Camiones y Carga</h3>
+      </div>
+
+      <div class="bg-white rounded-2xl border p-3">
+        <div class="h-40 relative bg-slate-100 rounded-xl overflow-hidden mb-3">
+          <img id="gallery-img-4" src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600" class="w-full h-full object-cover">
+          <label class="absolute bottom-2 right-2 bg-slate-900 text-white p-2 rounded-lg cursor-pointer text-xs">
+            <i class="fa-solid fa-camera"></i>
+            <input type="file" accept="image/*" class="hidden" onchange="changeGalleryImage(event, 'gallery-img-4')">
+          </label>
+        </div>
+        <h3 class="font-bold text-sm">Motos y Reparto</h3>
+      </div>
+    </div>
+  </section><!-- OPINIONES -->
+  <section class="bg-slate-100 py-12 px-4 border-y">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-5 rounded-2xl border shadow-sm">
+        <div class="text-amber-400 mb-2"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <p class="text-xs text-slate-600 italic">"Verifiqué mi póliza desde el teléfono frente a una alcabala sin problemas. 100% recomendado."</p>
+        <span class="block text-xs font-bold text-slate-800 mt-3">- Carlos R.</span>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border shadow-sm">
+        <div class="text-amber-400 mb-2"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <p class="text-xs text-slate-600 italic">"Excelente atención por WhatsApp. Me pasaron el QR rápido e imprimí el certificado al tiro."</p>
+        <span class="block text-xs font-bold text-slate-800 mt-3">- María G.</span>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border shadow-sm">
+        <div class="text-amber-400 mb-2"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <p class="text-xs text-slate-600 italic">"Rapidez y seriedad. Siempre aseguro mis motos y camionetas con Ávila Dorada."</p>
+        <span class="block text-xs font-bold text-slate-800 mt-3">- José H.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL LOGIN CON CLAVE 23456 -->
+  <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-900">Acceso Administrativo</h3>
+        <button onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="password" id="admin-pass-input" placeholder="Contraseña de acceso" class="w-full px-4 py-2.5 rounded-xl border mb-3 text-sm">
+      <p id="login-error-msg" class="text-rose-600 text-xs font-bold mb-3 hidden">Contraseña incorrecta.</p>
+      <button onclick="checkAdminPassword()" class="w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl text-sm">Ingresar</button>
+    </div>
+  </div>
+
+  <!-- PANEL ADMIN CON FORMULARIO Y TABLA FIREBASE -->
+  <div id="admin-dashboard-modal" class="fixed inset-0 bg-slate-900/70 z-50 overflow-y-auto p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-5xl mx-auto shadow-2xl overflow-hidden my-6 p-6">
+      <div class="flex justify-between items-center pb-4 border-b">
+        <h3 class="font-bold text-lg text-slate-900">Panel RCV (Firebase Cloud)</h3>
+        <button onclick="closeDashboard()"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+
+      <!-- Cargar Logo -->
+      <div class="my-6 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between">
+        <div>
+          <h4 class="font-bold text-sm">Logotipo de la Empresa</h4>
+          <p class="text-xs text-slate-500">Sube la imagen de tu empresa para la web y certificados.</p>
+        </div>
+        <label class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">
+          Subir Logo <input type="file" accept="image/*" class="hidden" onchange="uploadCompanyLogo(event)">
+        </label>
+      </div>
+
+      <!-- Formulario -->
+      <form onsubmit="savePolicy(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-2xl border">
+        <div>
+          <label class="text-xs font-bold block mb-1">N° Póliza *</label>
+          <input type="text" id="pol-number" required class="w-full px-3 py-2 text-xs border rounded-lg uppercase">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Titular *</label>
+          <input type="text" id="pol-client" required class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Cédula / RIF *</label>
+          <input type="text" id="pol-cedula" required class="w-full px-3 py-2 text-xs border rounded-lg uppercase">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Placa *</label>
+          <input type="text" id="pol-plate" required class="w-full px-3 py-2 text-xs border rounded-lg uppercase font-bold text-amber-700">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Marca *</label>
+          <input type="text" id="pol-brand" required class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Modelo *</label>
+          <input type="text" id="pol-model" required class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Año</label>
+          <input type="text" id="pol-year" class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Color</label>
+          <input type="text" id="pol-color" class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Serial Carrocería</label>
+          <input type="text" id="pol-serial" class="w-full px-3 py-2 text-xs border rounded-lg uppercase">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Desde</label>
+          <input type="date" id="pol-start" required class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Hasta</label>
+          <input type="date" id="pol-end" required class="w-full px-3 py-2 text-xs border rounded-lg">
+        </div>
+        <div>
+          <label class="text-xs font-bold block mb-1">Estado</label>
+          <select id="pol-status" class="w-full px-3 py-2 text-xs border rounded-lg bg-white">
+            <option value="ACTIVA">ACTIVA (Vigente)</option>
+            <option value="EN TRAMITE">EN TRÁMITE</option>
+            <option value="VENCIDA">VENCIDA</option>
+          </select>
+        </div>
+        <div class="sm:col-span-3 text-right">
+          <button type="submit" id="save-btn" class="bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl text-xs">Guardar en la Nube</button>
+        </div>
+      </form>
+
+      <!-- Tabla -->
+      <div class="mt-6 overflow-x-auto border rounded-xl">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 uppercase border-b">
+            <tr>
+              <th class="p-3">Póliza</th>
+              <th class="p-3">Titular</th>
+              <th class="p-3">Cédula</th>
+              <th class="p-3">Placa</th>
+              <th class="p-3">Estado</th>
+              <th class="p-3 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="policies-tbody" class="divide-y"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-slate-900 text-slate-400 py-6 px-4 text-center text-xs mt-auto">
+    © 2026 Seguros Ávila Dorada C.A. Todos los derechos reservados.
+  </footer>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBN7IlfO9alMs9CKnZ3kyDIPHSCeuG5RJg",
+      authDomain: "avila-dorada-rcv.firebaseapp.com",
+      projectId: "avila-dorada-rcv",
+      storageBucket: "avila-dorada-rcv.firebasestorage.app",
+      messagingSenderId: "756487717453",
+      appId: "1:756487717453:web:c458c57636a5e63c375204"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const PASS = "23456";
+
+    function openAdminModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
+    function closeAdminModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
+    function openDashboard() { document.getElementById('admin-dashboard-modal').classList.remove('hidden'); loadTable(); }
+    function closeDashboard() { document.getElementById('admin-dashboard-modal').classList.add('hidden'); }
+
+    function checkAdminPassword() {
+      if (document.getElementById('admin-pass-input').value === PASS) {
+        closeAdminModal();
+        openDashboard();
+      } else {
+        document.getElementById('login-error-msg').classList.remove('hidden');
+      }
+    }
+
+    function uploadCompanyLogo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const r = new FileReader();
+        r.onload = ev => {
+          localStorage.setItem('avila_logo', ev.target.result);
+          initLogo();
+        };
+        r.readAsDataURL(file);
+      }
+    }
+
+    function initLogo() {
+      const l = localStorage.getItem('avila_logo');
+      if (l) {
+        document.getElementById('main-logo-img').src = l;
+        document.getElementById('main-logo-img').classList.remove('hidden');
+        document.getElementById('main-logo-fallback').classList.add('hidden');
+      }
+    }
+
+    function changeGalleryImage(e, id) {
+      const file = e.target.files[0];
+      if (file) {
+        const r = new FileReader();
+        r.onload = ev => {
+          document.getElementById(id).src = ev.target.result;
+          localStorage.setItem('img_' + id, ev.target.result);
+        };
+        r.readAsDataURL(file);
+      }
+    }
+
+    async function savePolicy(e) {
+      e.preventDefault();
+      const doc = {
+        number: document.getElementById('pol-number').value.trim().toUpperCase(),
+        client: document.getElementById('pol-client').value.trim(),
+        cedula: document.getElementById('pol-cedula').value.trim().toUpperCase().replace(/\s/g,''),
+        plate: document.getElementById('pol-plate').value.trim().toUpperCase().replace(/\s/g,''),
+        brand: document.getElementById('pol-brand').value.trim(),
+        model: document.getElementById('pol-model').value.trim(),
+        year: document.getElementById('pol-year').value.trim(),
+        color: document.getElementById('pol-color').value.trim(),
+        serial: document.getElementById('pol-serial').value.trim().toUpperCase(),
+        start: document.getElementById('pol-start').value,
+        end: document.getElementById('pol-end').value,
+        status: document.getElementById('pol-status').value,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection("policies").add(doc);
+      alert("¡Guardado en la nube!");
+      loadTable();
+    }
+
+    async function loadTable() {
+      const tb = document.getElementById('policies-tbody');
+      tb.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Cargando...</td></tr>';
+      const snap = await db.collection("policies").orderBy("createdAt", "desc").get();
+      let html = '';
+      snap.forEach(d => {
+        const p = d.data();
+        html += `<tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold">${p.number}</td>
+          <td class="p-3">${p.client}</td>
+          <td class="p-3">${p.cedula}</td>
+          <td class="p-3 font-bold text-amber-700">${p.plate}</td>
+          <td class="p-3">${p.status}</td>
+          <td class="p-3 text-right"><button onclick="deleteDoc('${d.id}')" class="text-rose-600 font-bold">X</button></td>
+        </tr>`;
+      });
+      tb.innerHTML = html || '<tr><td colspan="6" class="p-4 text-center">Sin datos.</td></tr>';
+    }
+
+    async function deleteDoc(id) {
+      if(confirm('¿Borrar registro?')) { await db.collection("policies").doc(id).delete(); loadTable(); }
+    }
+
+    async function searchPolicy() {
+      const q = document.getElementById('search-input').value.trim().toUpperCase().replace(/\s/g,'');
+      if(!q) return;
+      const res = document.getElementById('result-container');
+      res.classList.remove('hidden');
+      res.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow border text-center">Buscando...</div>';
+
+      let s = await db.collection("policies").where("plate", "==", q).get();
+      if(s.empty) s = await db.collection("policies").where("cedula", "==", q).get();
+
+      if(s.empty) {
+        res.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow border border-rose-200 text-center font-bold text-rose-600">No se encontró póliza activa.</div>';
+        return;
+      }
+
+      const p = s.docs[0].data();
+      const logo = localStorage.getItem('avila_logo');
+      res.innerHTML = `
+        <div id="printable-certificate" class="bg-white rounded-3xl shadow-xl border p-6">
+          <div class="flex justify-between items-center border-b pb-4">
+            <div>
+              <h2 class="text-xl font-black">SEGUROS ÁVILA DORADA</h2>
+              <span class="text-xs text-slate-500">Certificado Oficial RCV</span>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">${p.status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 my-4 text-xs">
+            <div><strong>Titular:</strong> ${p.client}<br><strong>Cédula:</strong> ${p.cedula}</div>
+            <div><strong>Placa:</strong> ${p.plate}<br><strong>Vehículo:</strong> ${p.brand} ${p.model}</div>
+          </div>
+          <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+            <span class="text-xs">Válido hasta: <strong>${p.end}</strong></span>
+            <div id="qrcode"></div>
+          </div>
+          <div class="mt-4 text-right no-print">
+            <button onclick="window.print()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold">Imprimir</button>
+          </div>
+        </div>
+      `;
+      setTimeout(() => {
+        new QRCode(document.getElementById("qrcode"), { text: "RCV-" + p.plate + "-" + p.number, width: 50, height: 50 });
+      }, 50);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initLogo();
+      ['gallery-img-1','gallery-img-2','gallery-img-3','gallery-img-4'].forEach(id => {
+        const s = localStorage.getItem('img_' + id);
+        if(s) document.getElementById(id).src = s;
+      });
+    });
+  </script>
+</body>
+</html>
